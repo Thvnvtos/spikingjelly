@@ -123,6 +123,7 @@ class SpikingHeidelbergDigits(Dataset):
     def __init__(
             self,
             root: str,
+            n_bins: int,
             train: bool = None,
             data_type: str = 'event',
             frames_number: int = None,
@@ -156,6 +157,7 @@ class SpikingHeidelbergDigits(Dataset):
         self.custom_integrated_frames_dir_name = custom_integrated_frames_dir_name
         self.transform = transform
         self.target_transform = target_transform
+        self.n_bins = n_bins
 
         download_root = os.path.join(root, 'download')
         extract_root = os.path.join(root, 'extract')
@@ -411,12 +413,17 @@ class SpikingHeidelbergDigits(Dataset):
             frames = np.load(self.frames_path[i], allow_pickle=True)['frames'].astype(np.float32)
             label = self.frames_label[i]
 
+            binned_len = frames.shape[1]//self.n_bins
+            binned_frames = np.zeros((frames.shape[0], binned_len))
+            for i in range(binned_len):
+                binned_frames[:,i] = frames[:, self.n_bins*i : self.n_bins*(i+1)].sum(axis=1)
+
             if self.transform is not None:
-                frames = self.transform(frames)
+                binned_frames = self.transform(binned_frames)
             if self.target_transform is not None:
                 label = self.target_transform(label)
 
-            return frames, label
+            return binned_frames, label
 
 
 
@@ -468,6 +475,7 @@ class SpikingSpeechCommands(Dataset):
     def __init__(
             self,
             root: str,
+            n_bins: int,
             split: str = 'train',
             data_type: str = 'event',
             frames_number: int = None,
@@ -501,6 +509,7 @@ class SpikingSpeechCommands(Dataset):
         self.custom_integrated_frames_dir_name = custom_integrated_frames_dir_name
         self.transform = transform
         self.target_transform = target_transform
+        self.n_bins = n_bins
 
         download_root = os.path.join(root, 'download')
         extract_root = os.path.join(root, 'extract')
@@ -797,12 +806,17 @@ class SpikingSpeechCommands(Dataset):
             frames = np.load(self.frames_path[i], allow_pickle=True)['frames'].astype(np.float32)
             label = self.frames_label[i]
 
+            binned_len = frames.shape[1]//self.n_bins
+            binned_frames = np.zeros((frames.shape[0], binned_len))
+            for i in range(binned_len):
+                binned_frames[:,i] = frames[:, self.n_bins*i : self.n_bins*(i+1)].sum(axis=1)
+
             if self.transform is not None:
-                frames = self.transform(frames)
+                binned_frames = self.transform(binned_frames)
             if self.target_transform is not None:
                 label = self.target_transform(label)
 
-            return frames, label
+            return binned_frames, label
 
 
 
